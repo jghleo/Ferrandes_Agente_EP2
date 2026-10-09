@@ -1,0 +1,40 @@
+SMOKE TEST AGENTE LANGCHAIN (create_agent) - FERRANDES EP2
+Modo: OFFLINE (modelo simulado) | herramientas: StructuredTool
+======================================================================
+GRAFO DE ORQUESTACION (intents):
+        +-----------+         
+        | __start__ |         
+        +-----------+         
+               *              
+               *              
+               *              
+          +-------+           
+          | model |           
+          +-------+.          
+          .         .         
+        ..           ..       
+       .               .      
++---------+         +-------+ 
+| __end__ |         | tools | 
++---------+         +-------+ 
+
+======================================================================
+CONSULTA: tienes stock del taladro HER-001?
+[human] 'tienes stock del taladro HER-001?'
+[ai] tooll_call -> consultar_stock({'producto_id': 'HER-001'})
+[tool] name=consultar_stock respuesta='Stock de HER-001 - Taladro percutor 13 mm, 850 W (categoria: Herramientas, unidad: unidad): 34 unidades (stock minimo recomendado: 10). Estado: OK.'
+[ai] name=AgenteFerrandes respuesta='Resultado de Ferrandes:\nStock de HER-001 - Taladro percutor 13 mm, 850 W (categoria: Herramientas, unidad: unidad): 34 unidades (stock minimo recomendado: 10). Estado: OK.'
+
+======================================================================
+CONSULTA: quiero hacer un pedido CL-002 con TOR-002:100 y ELE-002:50
+[human] 'quiero hacer un pedido CL-002 con TOR-002:100 y ELE-002:50'
+[ai] tooll_call -> planificar_pedido({'cliente_id': 'CL-002', 'items': 'TOR-002:100, ELE-002:50'})
+[tool] name=planificar_pedido respuesta='FLUJO DE PEDIDO (cliente CL-002) -> PEDIDO_CONFIRMADO\n  [1. ANALIZAR_SOLICITUD] (analizar_solicitud): 2 items validos para Maestranza Bio Sur SpA.\n  [2. VALIDAR_STOCK] (consultar_stock): TOR-002: stoc...'
+[ai] name=AgenteFerrandes respuesta='Resultado de Ferrandes:\nFLUJO DE PEDIDO (cliente CL-002) -> PEDIDO_CONFIRMADO\n  [1. ANALIZAR_SOLICITUD] (analizar_solicitud): 2 items validos para Maestranza Bio Sur SpA.\n  [2. VALIDAR_STOCK] (consult...'
+
+======================================================================
+CONSULTA: que EPP me exige la normativa para trabajo en altura?
+[human] 'que EPP me exige la normativa para trabajo en altura?'
+[ai] tooll_call -> crear_ticket_escalamiento({'cliente_id': 'CL-001', 'motivo': 'Consulta normativa: que EPP me exige la normativa para trabajo en altura?'})
+[tool] name=crear_ticket_escalamiento respuesta="Ticket TKT-000001 creado para Constructora Montemar Ltda.: 'Consulta normativa: que EPP me exige la normativa para trabajo en altura?'. Un vendedor especialista de Ferrandes lo revisara en menos de 24..."
+[ai] name=AgenteFerrandes respuesta="Resultado de Ferrandes:\nTicket TKT-000001 creado para Constructora Montemar Ltda.: 'Consulta normativa: que EPP me exige la normativa para trabajo en altura?'. Un vendedor especialista de Ferrandes lo..."

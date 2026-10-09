@@ -1,0 +1,121 @@
+DEMO AGENTE FERRANDES - EVALUACION PARCIAL 2 (ISY0101)
+Ferreteria Industrial Andes SpA (FERRANDES), Concepcion, Chile
+
+==============================================================================
+ESCENARIO A - CONSULTA (herramienta de consulta)
+CONSULTA: tienes stock del taladro HER-001?
+------------------------------------------------------------------------------
+Stock de HER-001 - Taladro percutor 13 mm, 850 W (categoria: Herramientas, unidad: unidad): 34 unidades (stock minimo recomendado: 10). Estado: OK.
+
+==============================================================================
+ESCENARIO B - FLUJO COMPLETO DE PEDIDO CON ADAPTACION (falta stock de TOR-002)
+CONSULTA: quiero hacer un pedido CL-002 con TOR-002:100 y ELE-001:20 y ELE-002:50
+------------------------------------------------------------------------------
+FLUJO DE PEDIDO (cliente CL-002) -> EN_APROBACION
+  [1. ANALIZAR_SOLICITUD] (analizar_solicitud): 3 items validos para Maestranza Bio Sur SpA.
+  [2. VALIDAR_STOCK] (consultar_stock): TOR-002: stock 12/150
+  [2. VALIDAR_STOCK] (consultar_stock): ELE-001: stock 60/30
+  [2. VALIDAR_STOCK] (consultar_stock): ELE-002: stock 900/300
+  [3. DECIDIR_REPOSICION] (decidir_reposicion): REPOSICION: REQUERIDA. TOR-002 esta en estado BAJO con 12 unidades (minimo 150). Se sugiere emitir orden de compra por 138 unidades a Inoxidables del Sur S.A.; reposicion en 7 dias.
+  [3b. EMITIR_ORDEN_COMPRA (TOR-002)] (generar_orden_reposicion): Orden de compra OC-000001 emitida: 138 unidades de TOR-002 Perno galvanizado grado 8 M10 x 40 mm al proveedor Inoxidables del Sur S.A.. Reposicion estimada en 7 dias.
+  [4. CREAR_COTIZACION] (crear_cotizacion): Cotizacion COT-000001 generada para Maestranza Bio Sur SpA (CL-002):
+- 100 x TOR-002 Perno galvanizado grado 8 M10 x 40 mm = $21,000
+- 20 x ELE-001 Cable THHN-LSOH 12 AWG, rollo de 100 m = $919,800
+- 50 x ELE-002 Cinta aislante vinilica 18 mm x 20 m = $109,500
+Subtotal: $1,050,300 | Descuento: 8% ($84,024) | IVA 19%: $183,592 | TOTAL: $1,149,868.
+  [5. EVALUAR_RIESGO_CREDITO] (evaluar_riesgo_credito): DECISION: REQUIERE_APROBACION_POR_MONTO. El monto $1,149,868 supera el umbral de $1,000,000; el vendedor debe validar la operacion.
+  [6. DECIDIR_FLUJO_FINAL] (crear_ticket_escalamiento): Ticket TKT-000001 abierto; pedido queda EN_APROBACION.
+  DECISION ADAPTACION: Items bajo stock: TOR-002. -- El plan base se extiende con pasos de reposicion antes de cotizar.
+  DECISION ESTRATEGIA: Orden de compra emitida para TOR-002; entrega se programa cuando llegue reposicion. -- Decision adaptativa: imagen de no perder la venta y mantener SLA de despacho.
+  DECISION EVALUACION_CREDITO: REQUIERE_APROBACION_POR_MONTO. El monto $1,149,868 supera el umbral de $1,000,000; el vendedor debe validar la operacion. -- Politica de credito y cupo aplicada de forma adaptativa segun el cliente.
+  DECISION BLOQUEA: Pedido en espera de aprobacion humana. -- Regla de negocio: montos altos o cupo insuficiente requieren validacion.
+  Cotizacion: COT-000001 | Total: $1,149,868
+  Ticket de escalamiento: TKT-000001
+
+==============================================================================
+ESCENARIO C - DECISION ADAPTATIVA POR CREDITO (monto supera el cupo/umbral)
+CONSULTA: hacer un pedido CL-002 con SOL-001:80 y HER-001:30
+------------------------------------------------------------------------------
+FLUJO DE PEDIDO (cliente CL-002) -> EN_APROBACION
+  [1. ANALIZAR_SOLICITUD] (analizar_solicitud): 2 items validos para Maestranza Bio Sur SpA.
+  [2. VALIDAR_STOCK] (consultar_stock): SOL-001: stock 5/25
+  [2. VALIDAR_STOCK] (consultar_stock): HER-001: stock 34/10
+  [3. DECIDIR_REPOSICION] (decidir_reposicion): REPOSICION: REQUERIDA. SOL-001 esta en estado BAJO con 5 unidades (minimo 25). Se sugiere emitir orden de compra por 20 unidades a Suministros de Soldadura Austral Ltda.; reposicion en 8 dias.
+  [3b. EMITIR_ORDEN_COMPRA (SOL-001)] (generar_orden_reposicion): Orden de compra OC-000002 emitida: 20 unidades de SOL-001 Electrodos E-6013 3,2 mm, caja de 5 kg al proveedor Suministros de Soldadura Austral Ltda.. Reposicion estimada en 8 dias.
+  [4. CREAR_COTIZACION] (crear_cotizacion): Cotizacion COT-000002 generada para Maestranza Bio Sur SpA (CL-002):
+- 80 x SOL-001 Electrodos E-6013 3,2 mm, caja de 5 kg = $1,279,200
+- 30 x HER-001 Taladro percutor 13 mm, 850 W = $2,399,700
+Subtotal: $3,678,900 | Descuento: 8% ($294,312) | IVA 19%: $643,072 | TOTAL: $4,027,660.
+  [5. EVALUAR_RIESGO_CREDITO] (evaluar_riesgo_credito): DECISION: REQUIERE_APROBACION. El monto $4,027,660 supera el cupo disponible de Maestranza Bio Sur SpA ($1,550,000). Se genera ticket de escalamiento para aprobacion del vendedor.
+  [6. DECIDIR_FLUJO_FINAL] (crear_ticket_escalamiento): Ticket TKT-000002 abierto; pedido queda EN_APROBACION.
+  DECISION ADAPTACION: Items bajo stock: SOL-001. -- El plan base se extiende con pasos de reposicion antes de cotizar.
+  DECISION ESTRATEGIA: Orden de compra emitida para SOL-001; entrega se programa cuando llegue reposicion. -- Decision adaptativa: imagen de no perder la venta y mantener SLA de despacho.
+  DECISION EVALUACION_CREDITO: REQUIERE_APROBACION. El monto $4,027,660 supera el cupo disponible de Maestranza Bio Sur SpA ($1,550,000). Se genera ticket de escalamiento para aprobacion del vendedor. -- Politica de credito y cupo aplicada de forma adaptativa segun el cliente.
+  DECISION BLOQUEA: Pedido en espera de aprobacion humana. -- Regla de negocio: montos altos o cupo insuficiente requieren validacion.
+  Cotizacion: COT-000002 | Total: $4,027,660
+  Ticket de escalamiento: TKT-000002
+
+==============================================================================
+ESCENARIO D - CLIENTE NUEVO: PAGO CONTRA ENTREGA (regla de credito)
+CONSULTA: cotizar CL-004 con EPP-001:40 y EPP-002:10
+------------------------------------------------------------------------------
+FLUJO DE PEDIDO (cliente CL-004) -> PEDIDO_CONFIRMADO
+  [1. ANALIZAR_SOLICITUD] (analizar_solicitud): 2 items validos para Constructora Alborada SpA.
+  [2. VALIDAR_STOCK] (consultar_stock): EPP-001: stock 400/100
+  [2. VALIDAR_STOCK] (consultar_stock): EPP-002: stock 25/80
+  [3. DECIDIR_REPOSICION] (decidir_reposicion): REPOSICION: REQUERIDA. EPP-002 esta en estado BAJO con 25 unidades (minimo 80). Se sugiere emitir orden de compra por 55 unidades a Equipos de Seguridad Biobio SpA; reposicion en 6 dias.
+  [3b. EMITIR_ORDEN_COMPRA (EPP-002)] (generar_orden_reposicion): Orden de compra OC-000003 emitida: 55 unidades de EPP-002 Guantes de nitrilo desechables, caja x100 al proveedor Equipos de Seguridad Biobio SpA. Reposicion estimada en 6 dias.
+  [4. CREAR_COTIZACION] (crear_cotizacion): Cotizacion COT-000003 generada para Constructora Alborada SpA (CL-004):
+- 40 x EPP-001 Casco de seguridad clase E color amarillo = $359,600
+- 10 x EPP-002 Guantes de nitrilo desechables, caja x100 = $74,900
+Subtotal: $434,500 | Descuento: 0% ($0) | IVA 19%: $82,555 | TOTAL: $517,055.
+  [5. EVALUAR_RIESGO_CREDITO] (evaluar_riesgo_credito): DECISION: PAGO_CONTRA_ENTREGA. Cliente Constructora Alborada SpA es nuevo y no tiene historial de credito. Se solicita pago contra entrega o contado hasta revision del vendedor.
+  [6. DECIDIR_FLUJO_FINAL] (confirmar_pedido): Pedido PAT-000001 confirmado (cliente CL-004, total $517,055). Etapa inicial: PENDIENTE_DESPACHO.
+  DECISION ADAPTACION: Items bajo stock: EPP-002. -- El plan base se extiende con pasos de reposicion antes de cotizar.
+  DECISION ESTRATEGIA: Orden de compra emitida para EPP-002; entrega se programa cuando llegue reposicion. -- Decision adaptativa: imagen de no perder la venta y mantener SLA de despacho.
+  DECISION EVALUACION_CREDITO: PAGO_CONTRA_ENTREGA. Cliente Constructora Alborada SpA es nuevo y no tiene historial de credito. Se solicita pago contra entrega o contado hasta revision del vendedor. -- Politica de credito y cupo aplicada de forma adaptativa segun el cliente.
+  DECISION APRUEBA: Pedido confirmado y programado para despacho. -- Cupo disponible y condiciones de la operacion cumplidas.
+  Cotizacion: COT-000003 | Total: $517,055
+  Pedido: PAT-000001
+
+==============================================================================
+ESCENARIO D2 - CONFIRMACION SEGUN ESTADO EN MEMORIA (idempotencia)
+CONSULTA: confirma el pedido de la cotizacion COT-000003
+------------------------------------------------------------------------------
+La cotizacion COT-000003 ya fue procesada (estado CONFIRMADA).
+
+==============================================================================
+ESCENARIO E - GUARDRAIL: DERIVACION NORMATIVA A ESPECIALISTA
+CONSULTA: que EPP me exige la normativa para trabajo en altura?
+------------------------------------------------------------------------------
+Esta consulta requiere criterio de un especialista en Prevencion de Riesgos: la seleccion de EPP y el cumplimiento normativo dependen de la obra y su evaluacion de riesgo. He creado un ticket para que el especialista te contacte. Mientras tanto, todo nuestro EPP tiene certificacion y puedes revisar las fichas de los productos.
+[Ticket TKT-000003 creado]
+
+==============================================================================
+ESCENARIO F1 - MEMORIA DE CORTO PLAZO: dialogo previo (sesion 1)
+CONSULTA: hola, soy de Constructora Montemar
+------------------------------------------------------------------------------
+Puedo ayudarte con: stock y precios (ej. 'stock de TOR-001'), catalogo, cotizaciones y pedidos (ej. 'cotizar CL-001 TOR-001:50, EPP-001:20'), despachos, credito y derivaciones tecnicas. Indica tu consulta.
+
+==============================================================================
+ESCENARIO F2 - MEMORIA DE LARGO PLAZO: retomando cotizacion previa
+CONSULTA: estado de mi pedido PAT-000001
+------------------------------------------------------------------------------
+Pedido PAT-000001 del cliente CL-004: etapa actual 'PENDIENTE_DESPACHO'. Historial de etapas: PENDIENTE_DESPACHO (2026-10-08T23:34:50). Items: [{"producto_id": "EPP-001", "nombre": "Casco de seguridad clase E color amarillo", "cantidad": 40, "precio_unitario": 8990}, {"producto_id": "EPP-002", "nombre": "Guantes de nitrilo desechables, caja x100", "cantidad": 10, "precio_unitario": 7490}]
+
+==============================================================================
+ESCENARIO G - RECUPERACION SEMANTICA (RAG) PARA PREGUNTA GENERAL
+CONSULTA: cuantas horas demora el despacho en concepcion?
+------------------------------------------------------------------------------
+Segun la informacion de Ferrandes (pol_despacho): despacho: gratis_desde: 100000 plazo_concepcion_horas: 48 plazo_ciudades_vecinas_horas: 72 cobertura: Concepcion, Talcahuano, Chiguayante, San Pedro de la Paz, Penco.
+[Para mas detalle puedo consultar otras fichas o generar una cotizacion.]
+
+==============================================================================
+RESUMEN DE TRAZABILIDAD
+- Interacciones registradas en memoria de largo plazo: 8
+- Cotizaciones generadas: 3 | Pedidos: 1 | Tickets de escalamiento: 3 | Ordenes de reposicion (OC): 3
+- Turnos en memoria de corto plazo de la sesion demo: 18
+- Log de trazabilidad: evidencia/logs_agente.jsonl
+- Base de datos de memoria persistente: datos_ferrandes.db
+
+Ejecutado el 2026-10-08T23:34:50

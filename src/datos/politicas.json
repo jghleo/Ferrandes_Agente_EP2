@@ -1,0 +1,25 @@
+{
+  "empresa": "Ferreteria Industrial Andes SpA (FERRANDES)",
+  "ubicacion": "Av. Los Carrera 2140, Concepcion, Region del Biobio, Chile.",
+  "horario": "Lunes a viernes de 08:00 a 18:00 hrs; sabados de 09:00 a 13:00 hrs.",
+  "telefono": "+56 41 2 555 000",
+  "correo": "ventas@ferrandes.cl",
+  "despacho": {
+    "gratis_desde": 100000,
+    "plazo_concepcion_horas": 48,
+    "plazo_ciudades_vecinas_horas": 72,
+    "cobertura": "Concepcion, Talcahuano, Chiguayante, San Pedro de la Paz, Penco."
+  },
+  "credito": {
+    "regla": "Los clientes con cuenta corriente habilitada pueden solicitar credito. Clientes nuevos o sin historial pagan contra entrega o contado hasta que el vendedor complete la revision de cupo.",
+    "regla_monto_minimo": 1000000
+  },
+  "descuentos": [
+    {"monto_desde": 1000000, "porcentaje": 8},
+    {"monto_desde": 500000, "porcentaje": 5},
+    {"monto_desde": 0, "porcentaje": 0}
+  ],
+  "iva": 0.19,
+  "devoluciones": "15 dias corridos desde la entrega, productos sin uso y en empaque original.",
+  "pago_contra_entrega": true
+}

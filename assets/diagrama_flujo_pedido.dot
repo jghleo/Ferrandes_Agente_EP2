@@ -1,0 +1,27 @@
+digraph FlujoPedido {
+  rankdir = TB;
+  splines = ortho;
+  node [shape = box, style = "rounded,filled", fontname = "Helvetica", fontsize = 11, color = "#2c3e50", fillcolor = "#fef9e7"];
+  edge [color = "#34495e", fontname = "Helvetica", fontsize = 9];
+  start [label = "Solicitud de pedido\n(cliente + items)", fillcolor = "#d6eaf8"];
+  p1 [label = "Paso 1: ANALIZAR\nvalidar cliente y items", fillcolor = "#d5f5e3"];
+  p2 [label = "Paso 2: VALIDAR STOCK\npor cada item", fillcolor = "#d5f5e3"];
+  d_faltantes [label = "\u00BFHay items\nbajo stock?", shape = diamond, fillcolor = "#fdebd0"];
+  p3 [label = "Paso 3: REPOSICION (adaptativo)\nemitir OC al proveedor\n+ programar entrega", fillcolor = "#f9e79f"];
+  p4 [label = "Paso 4: CREAR COTIZACION\nsubtotal + descuento + IVA", fillcolor = "#d5f5e3"];
+  p5 [label = "Paso 5: EVALUAR CREDITO\ncupo disponible y reglas", fillcolor = "#d5f5e3"];
+  d_cred [label = "\u00BFCupo / umbral\nOK?", shape = diamond, fillcolor = "#fdebd0"];
+  p6a [label = "Paso 6: CONFIRMAR PEDIDO\n-> PENDIENTE_DESPACHO", fillcolor = "#abebc6"];
+  p6b [label = "Paso 6: ESCALAR A VENDEDOR\nticket -> EN_APROBACION", fillcolor = "#f5b7b1"];
+  fin [label = "Respuesta final + memoria\n(y trazabilidad)", fillcolor = "#d6eaf8"];
+
+  start -> p1 -> p2 -> d_faltantes;
+  d_faltantes -> p3 [label = "si"];
+  d_faltantes -> p4 [label = "no"];
+  p3 -> p4;
+  p4 -> p5 -> d_cred;
+  d_cred -> p6a [label = "si"];
+  d_cred -> p6b [label = "no"];
+  p6a -> fin;
+  p6b -> fin;
+}

@@ -1,0 +1,51 @@
+digraph Arquitectura {
+  rankdir = TB;
+  splines = ortho;
+  node [shape = box, style = "rounded,filled", fontname = "Helvetica", fontsize = 11, color = "#2c3e50", fillcolor = "#eaf2f8"];
+  edge [color = "#34495e", fontname = "Helvetica", fontsize = 9];
+  subgraph cluster_cliente {
+    label = "Solicitud / Consulta"; style = "dashed"; color = "#7f8c8d";
+    Usuario [label = "Usuario B2B\n(lenguaje natural)"];
+  }
+  subgraph cluster_agente {
+    label = "AGENTE FERRANDES (orquestacion)"; style = "rounded"; color = "#2980b9"; fillcolor = "#d6eaf8";
+    Orquestador [label = "Agente\n(LangChain create_agent /\nejecutor local)"];
+    Planificador [label = "Planificador\n(esquema de tareas +\ndecisiones adaptativas)"];
+    LLM [label = "LLM / Decisiones\n(Claude o modelo simulado)"];
+  }
+  subgraph cluster_herramientas {
+    label = "Herramientas del agente"; style = "rounded"; color = "#27ae60"; fillcolor = "#d5f5e3";
+    HConsulta [label = "CONSULTA\nstock, precio, catalogo,\nficha, pedido, cotizacion"];
+    HEscritura [label = "ESCRITURA\ncotizacion, pedido,\norden de compra, ticket"];
+    HRazonamiento [label = "RAZONAMIENTO\nriesgo de credito,\nreposicion, plan pedido"];
+  }
+  subgraph cluster_memoria {
+    label = "Memoria y contexto"; style = "rounded"; color = "#8e44ad"; fillcolor = "#f4ecf7";
+    MCorto [label = "Memoria corto plazo\n(buffer de sesion)"];
+    MLargo [label = "Memoria largo plazo\n(SQLite: clientes, cotizaciones,\npedidos, tickets, OC)"];
+    Retriever [label = "Recuperacion semantica\n(retriever RAG)"];
+  }
+  Datos [label = "Fuentes de datos\ncatalogo, clientes,\npoliticas, faqs (JSON)"];
+  Log [label = "Trazabilidad\nlogs_agente.jsonl\n+ evidencia"];
+
+  Usuario -> Orquestador;
+  Orquestador -> LLM;
+  Orquestador -> Planificador;
+  Orquestador -> MCorto;
+  Orquestador -> HConsulta;
+  Orquestador -> HEscritura;
+  Orquestador -> HRazonamiento;
+  Planificador -> HConsulta;
+  Planificador -> HEscritura;
+  Planificador -> HRazonamiento;
+  LLM -> HConsulta;
+  LLM -> HEscritura;
+  LLM -> HRazonamiento;
+  Retriever -> Datos;
+  Orquestador -> Retriever;
+  Orquestador -> MLargo;
+  HConsulta -> MLargo;
+  HEscritura -> MLargo;
+  HRazonamiento -> MLargo;
+  MLargo -> Log;
+}

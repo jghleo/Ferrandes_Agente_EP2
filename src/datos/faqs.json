@@ -1,0 +1,30 @@
+[
+  {
+    "id": "faq_comprar",
+    "texto": "Como comprar: solicita tu cotizacion a traves del agente de Ferrandes (ventas@ferrandes.cl o en tienda). Con la cotizacion confirmada, el pedido queda en estado PENDIENTE_DESPACHO y se informa el plazo de entrega."
+  },
+  {
+    "id": "faq_despacho",
+    "texto": "Cuanto tarda el despacho: en Concepcion hasta 48 hrs y en ciudades vecinas hasta 72 hrs. El despacho es gratis en compras desde $100.000 (antes de IVA)."
+  },
+  {
+    "id": "faq_credito",
+    "texto": "Como obtener credito: debes tener cuenta corriente habilitada y un historial de al menos 3 compras; el vendedor revisa y asigna cupo dentro de 1 dia habil."
+  },
+  {
+    "id": "faq_devolucion",
+    "texto": "Puedo devolver un producto: si, dentro de 15 dias corridos, sin uso y en empaque original."
+  },
+  {
+    "id": "faq_ficha",
+    "texto": "Donde ver la ficha tecnica: cada producto del catalogo tiene ficha tecnica con descripcion, proveedor y tiempo de reposicion; solicitala al agente indicando el codigo del producto."
+  },
+  {
+    "id": "faq_epp",
+    "texto": "Entregan EPP: si, cascos, guantes, proteccion auditiva y ocular certificados."
+  },
+  {
+    "id": "faq_pedido",
+    "texto": "Como consultar el estado de un pedido: indica el numero de pedido (PAT-XXXXXX) al agente y este mostrara la etapa actual y el historial de etapas."
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "CL-001",
+    "nombre": "Constructora Montemar Ltda.",
+    "ciudad": "Concepcion",
+    "credito": true,
+    "cupo_credito": 5000000,
+    "saldo_usado": 1200000,
+    "metodo_pago_favorito": "Transferencia bancaria",
+    "preferencias": ["entrega en obra", "despacho coordinado"],
+    "ultima_interaccion": "2026-10-01",
+    "etiquetas": ["recurrente", "alto-volumen"]
+  },
+  {
+    "id": "CL-002",
+    "nombre": "Maestranza Bio Sur SpA",
+    "ciudad": "Chiguayante",
+    "credito": true,
+    "cupo_credito": 2000000,
+    "saldo_usado": 450000,
+    "metodo_pago_favorito": "Factura a 30 dias",
+    "preferencias": ["retiro en tienda"],
+    "ultima_interaccion": "2026-09-20",
+    "etiquetas": ["recurrente"]
+  },
+  {
+    "id": "CL-003",
+    "nombre": "Taller Electrico Voltaje Ltda.",
+    "ciudad": "Concepcion",
+    "credito": false,
+    "cupo_credito": 0,
+    "saldo_usado": 0,
+    "metodo_pago_favorito": "Efectivo / debito",
+    "preferencias": ["compra en tienda"],
+    "ultima_interaccion": "2026-08-15",
+    "etiquetas": ["contado"]
+  },
+  {
+    "id": "CL-004",
+    "nombre": "Constructora Alborada SpA",
+    "ciudad": "Concepcion",
+    "credito": false,
+    "cupo_credito": 0,
+    "saldo_usado": 0,
+    "metodo_pago_favorito": "por definir",
+    "preferencias": [],
+    "ultima_interaccion": null,
+    "etiquetas": ["nuevo-lead", "sin-historial"]
+  }
+]
