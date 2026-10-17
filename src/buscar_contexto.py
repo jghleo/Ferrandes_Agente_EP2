@@ -147,13 +147,16 @@ def _recuperar_embeddings(documentos, consulta, top_k):
 
 # ------------------------------------------------------------------ API publica
 def recuperar_contexto(datos: dict, consulta: str, top_k: int = 3,
-                       modo: str = "tfidf") -> list[dict]:
+                       modo: str | None = None) -> list[dict]:
     """Retorna los documentos mas relevantes para la consulta.
 
     modo: "tfidf" (por defecto, sin dependencias), "embeddings" (requiere
     sentence-transformers) o "auto" (usa embeddings si estan disponibles y, si
-    no, cae a tfidf).
+    no, cae a tfidf). Si se omite, se toma de la variable de entorno
+    FERRANDES_RETRIEVER_MODE (util para activar embeddings sin editar codigo,
+    por ejemplo en Google Colab); su valor por defecto es "tfidf".
     """
+    modo = modo or os.environ.get("FERRANDES_RETRIEVER_MODE", "tfidf")
     documentos = construir_corpus(datos)
     if not documentos:
         return []
@@ -183,13 +186,14 @@ CASOS_EVALUACION = [
 
 
 def evaluar_recuperacion(datos: dict, casos: list | None = None, top_k: int = 3,
-                         modo: str = "tfidf") -> dict:
+                         modo: str | None = None) -> dict:
     """Mide la calidad del retriever: hit-rate@k y MRR (rango reciproco medio).
 
     `casos` es una lista de tuplas (consulta, id_esperado). Si se omite, usa
-    `CASOS_EVALUACION`.
+    `CASOS_EVALUACION`. `modo` sigue la misma regla que `recuperar_contexto`.
     """
     casos = casos or CASOS_EVALUACION
+    modo = modo or os.environ.get("FERRANDES_RETRIEVER_MODE", "tfidf")
     aciertos = 0
     suma_rr = 0.0
     detalle = []

@@ -121,6 +121,25 @@ print()
 print(agente.responder("que EPP me exige la normativa para trabajo en altura?"))
 """),
     md(
+"""## 4c) (Opcional) Embeddings densos y métricas del retriever (IE4)
+
+Compara el retriever TF-IDF (por defecto) con embeddings reales sobre el mismo
+conjunto etiquetado. En Colab la descarga del modelo es rápida.
+"""),
+    codigo(
+"""# 4c) Embeddings densos + comparación de métricas
+!pip install -q sentence-transformers
+import sys; sys.path.insert(0, ".")
+from src.datos import cargar_datos
+from src.buscar_contexto import evaluar_recuperacion
+
+datos = cargar_datos()
+print("TF-IDF    :", evaluar_recuperacion(datos, modo="tfidf"))
+print("Embeddings:", evaluar_recuperacion(datos, modo="embeddings"))
+# Para que TODO el agente use embeddings, activa la variable de entorno:
+# import os; os.environ["FERRANDES_RETRIEVER_MODE"] = "auto"
+"""),
+    md(
 """## 5) GUARDAR los resultados 🔒
 
 **Antes de cerrar la sesión** descarga los artefactos a tu PC o guárdalos en

@@ -222,7 +222,9 @@ generado dinámicamente) y como funciones reutilizables por el ejecutor local.
   (`sentence-transformers`, modo `auto`) sin cambiar la interfaz, y expone
   `evaluar_recuperacion()` para medir su calidad (**hit-rate@k** y **MRR**).
   Resultado actual: **hit-rate@3 = 100 % / MRR = 1,00** sobre 8 consultas
-  etiquetadas.
+  etiquetadas. Para activar embeddings sin tocar código, define
+  `FERRANDES_RETRIEVER_MODE=auto` (o `embeddings`) — útil en Google Colab tras
+  `pip install sentence-transformers`.
 
 ---
 
