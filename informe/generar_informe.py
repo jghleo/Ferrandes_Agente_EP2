@@ -181,9 +181,10 @@ def generar():
         "etapas, tickets, órdenes de reposición). Una cotización creada en la sesión A se "
         "consulta y se convierte en pedido en la sesión B (test de persistencia).")
     con_viñeta(doc,
-        "Recuperación semántica: retriever por palabras clave sobre el corpus documental "
-        "(catálogo, políticas, FAQs), equivalente al mock de embeddings de la EP1; en "
-        "producción se sustituye por Chroma/FAISS con embeddings.")
+        "Recuperación semántica: retriever con similitud coseno sobre vectores TF-IDF "
+        "(ponderación por frecuencia inversa de documento y normalización morfológica "
+        "ligera), con soporte opcional de embeddings densos (sentence-transformers). "
+        "Se mide su calidad con un conjunto etiquetado de consultas: hit-rate@3 y MRR.")
 
     # --------------------------------------------------------------- 4
     doc.add_heading("4. Planificación y toma de decisiones (IE5)", level=1)
@@ -194,8 +195,11 @@ def generar():
         "el entorno cambia: faltantes de stock generan órdenes de reposición automáticas; "
         "montos que superan cupo o umbral bloquean el pedido y escalan a un vendedor vía "
         "ticket; clientes nuevos pagan contra entrega; consultas normativas se derivan a un "
-        "especialista (guardrail). Cada decisión se registra con su justificación, lo que "
-        "permite trazabilidad y auditoría.")
+        "especialista (guardrail). El plan expone además una priorización explícita por "
+        "criticidad y una etapa de replanificación: si la solicitud trae ítems inválidos "
+        "(producto inexistente o cantidad no válida), el agente los descarta, lo informa y "
+        "continúa con los válidos en lugar de abortar. Cada decisión se registra con su "
+        "justificación, lo que permite trazabilidad y auditoría.")
 
     doc.add_picture(str(RAIZ / "assets" / "diagrama_flujo_pedido.png"), width=Cm(6.5))
     doc.paragraphs[-1].alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -219,12 +223,15 @@ def generar():
             ["D. Cliente nuevo CL-004", "sin historial", "pago contra entrega + confirmación", "PEDIDO_CONFIRMADO"],
             ["E. Normativa EPP/altura", "guardrail", "derivación a especialista (ticket)", "DERIVADO"],
             ["F. Consulta de pedido previo", "memoria LP", "historial de etapas desde SQLite", "PENDIENTE_DESPACHO"],
+            ["H. Ítems inválidos (FIJ-999, ELE-001:0)", "entrada inválida", "replanifica: descarta inválidos y continúa", "PEDIDO_CONFIRMADO"],
+            ["H2. Producto inexistente TOR-999", "entrada ambigua", "responde que no existe, sin inventar", "CONTROLADO"],
         ],
         anchos=[4.4, 2.6, 6.8, 3.0], fuente=8.5)
     cuerpo(doc, "La ejecución completa y el log por consulta están en evidencia/ y en el log "
                 "logs_agente.jsonl del repositorio; el smoke test del grafo LangChain se incluye "
-                "en evidencia/evidencia_langchain.txt. 29 pruebas unitarias validadas "
-                "(tests/ejecutar_tests.py).")
+                "en evidencia/evidencia_langchain.txt. 38 pruebas unitarias validadas "
+                "(tests/ejecutar_tests.py) y retriever con hit-rate@3 = 100 % sobre 8 consultas "
+                "etiquetadas.")
 
     # --------------------------------------------------------------- 7
     doc.add_heading("7. Decisiones de diseño y justificación (IE9)", level=1)
@@ -234,8 +241,8 @@ def generar():
             ["LangChain create_agent", "Grafo oficial del framework de agentes, mantenido y documentado; permite LLM real o simulado."],
             ["Herramientas puras por familia", "Separa lectura, escritura y razonamiento, alineado con IL2.1 y facilita pruebas y auditoría."],
             ["SQLite como memoria LP", "Persistencia ligera y sin servidor; simula una base organizacional; migrable a PostgreSQL."],
-            ["Retriever por palabras clave", "Reutiliza la estrategia de la EP1 (mock de embeddings); evidencia la continuidad del proyecto."],
-            ["Planificador + inyección adaptativa", "Cumple IL5/IE5: plan priorizado y comportamiento dinámico ante condiciones cambiantes."],
+            ["Retriever semántico TF-IDF", "Similitud coseno TF-IDF con normalización morfológica; mejora la precisión frente al conteo de palabras clave y admite embeddings densos sin cambiar la interfaz."],
+            ["Planificador + inyección adaptativa", "Cumple IL5/IE5: plan priorizado por criticidad, comportamiento dinámico y replanificación ante entradas inválidas."],
         ],
         anchos=[5.2, 11.2], fuente=8.5)
 
@@ -283,19 +290,19 @@ Herramientas de consulta (sin efectos), escritura (persistentes) y razonamiento 
 ## 3. Memoria y recuperación de contexto (IE3, IE4)
 - Corto plazo: buffer por sesión.
 - Largo plazo: SQLite (clientes, cotizaciones, pedidos con historial, tickets, OC).
-- Recuperación semántica: retriever por palabras clave (mock de embeddings, como EP1).
+- Recuperación semántica: retriever con similitud coseno TF-IDF (normalización morfológica) y embeddings densos opcionales; se mide con hit-rate@3 y MRR sobre consultas etiquetadas.
 
 ## 4. Planificación y decisión (IE5)
-Plan priorizado de 6 etapas con inyección adaptativa (reposición, escalamiento de crédito, pago contra entrega, guardrail normativo). Ver `assets/diagrama_flujo_pedido.png`.
+Plan priorizado de 6 etapas por criticidad, con inyección adaptativa (reposición, escalamiento de crédito, pago contra entrega, guardrail normativo) y **replanificación** ante ítems inválidos (descarta y continúa). Ver `assets/diagrama_flujo_pedido.png`.
 
 ## 5. Orquestación (IE8)
 Ver `assets/diagrama_arquitectura.png` y README.
 
 ## 6. Evidencia de pruebas (IE7)
-Ver `evidencia/evidencia_pruebas.txt`, `evidencia/evidencia_langchain.txt` y `evidencia/logs_agente.jsonl`. 29 pruebas unitarias (`tests/ejecutar_tests.py`).
+Ver `evidencia/evidencia_pruebas.txt`, `evidencia/evidencia_langchain.txt` y `evidencia/logs_agente.jsonl`. 38 pruebas unitarias (`tests/ejecutar_tests.py`) y retriever con hit-rate@3 = 100 % (8 consultas etiquetadas).
 
 ## 7. Decisiones de diseño (IE9)
-LangChain create_agent, herramientas por familia, SQLite como memoria LP, retriever por palabras clave, planificador con inyección adaptativa.
+LangChain create_agent, herramientas por familia, SQLite como memoria LP, retriever semántico TF-IDF (con embeddings opcionales), planificador priorizado con replanificación.
 
 ## 8. Declaración de uso de IA y referencias (APA)
 Se usó IA de apoyo; decisiones y reflexiones son propias. Referencias: Anthropic (2026); LangChain (2026); Duoc UC Bibliotecas (2026); Python `sqlite3` docs (2026).

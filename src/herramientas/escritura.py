@@ -10,23 +10,53 @@ import json
 from ..config import IVA, aplicar_descuento
 
 
-def _parse_items(servicios, items: str) -> list[dict]:
-    """Parsea 'TOR-001:50, EPP-001:20' a lista de items validados."""
-    detalle = []
+def _parse_items_tolerante(servicios, items: str) -> tuple[list[dict], list[str]]:
+    """Parsea items sin abortar: devuelve (validos, invalidos).
+
+    Permite que el planificador aplique una REPLANIFICACION: descartar los
+    items invalidos, informar al usuario y continuar con los validos, en lugar
+    de abortar todo el flujo. `invalidos` describe los problemas detectados.
+    """
+    validos: list[dict] = []
+    invalidos: list[str] = []
     for parte in str(items).replace(";", ",").split(","):
         parte = parte.strip()
-        if not parte or ":" not in parte:
+        if not parte:
+            continue
+        if ":" not in parte:
+            invalidos.append(f"{parte} (falta cantidad)")
             continue
         prod_id, cant = parte.split(":", 1)
-        producto = servicios.producto(prod_id.strip())
+        prod_id = prod_id.strip()
+        producto = servicios.producto(prod_id)
         if not producto:
-            raise ValueError(f"Producto desconocido: {prod_id.strip()}")
-        detalle.append({
+            invalidos.append(f"{prod_id} (producto desconocido)")
+            continue
+        try:
+            cantidad = int(cant.strip())
+        except ValueError:
+            invalidos.append(f"{prod_id} (cantidad no numerica)")
+            continue
+        if cantidad <= 0:
+            invalidos.append(f"{prod_id} (cantidad <= 0)")
+            continue
+        validos.append({
             "producto_id": producto["id"],
             "nombre": producto["nombre"],
-            "cantidad": int(cant.strip()),
+            "cantidad": cantidad,
             "precio_unitario": producto["precio_unitario"],
         })
+    return validos, invalidos
+
+
+def _parse_items(servicios, items: str) -> list[dict]:
+    """Parsea 'TOR-001:50, EPP-001:20' a lista de items validados.
+
+    Version estricta: lanza ValueError si hay items invalidos o ninguno valido.
+    """
+    detalle, invalidos = _parse_items_tolerante(servicios, items)
+    if invalidos:
+        raise ValueError(f"Producto desconocido: {', '.join(invalidos)}")
     if not detalle:
         raise ValueError("Debes indicar items en formato 'PROD:cantidad, PROD2:cantidad'.")
     return detalle

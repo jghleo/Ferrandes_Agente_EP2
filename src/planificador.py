@@ -3,11 +3,14 @@
 Disena un esquema de planificacion con etapas priorizadas para convertir una
 solicitud de pedido en un flujo de trabajo ejecutable. Durante la ejecucion:
 
-1. Genera el plan base (lista ordenada de pasos con prioridad y precondiciones).
+1. Genera el plan base (lista ordenada de pasos con prioridad, criticidad y
+   precondiciones) y expone `priorizar()` para ordenar por criticidad.
 2. Ejecuta cada paso e inyecta pasos ADAPTATIVOS cuando las condiciones cambian
    (stock faltante -> decision de reposicion; credito insuficiente o cliente
    nuevo -> escalamiento con ticket).
-3. Registra cada paso y cada decision en un "bitacora" que alimenta la memoria
+3. REPLANIFICA cuando la solicitud trae datos invalidos: descarta los items
+   invalidos, los informa y continua con los validos en lugar de abortar.
+4. Registra cada paso y cada decision en un "bitacora" que alimenta la memoria
    de largo plazo y la evidencia de trazabilidad.
 
 Este orquestador es la implementacion de referencia del flujo; el agente
@@ -21,10 +24,11 @@ from .herramientas import escritura, razonamiento
 
 @dataclass
 class PasoPlan:
-    """Un paso del plan con prioridad, herramienta opcional y precondicion."""
+    """Un paso del plan con prioridad, criticidad, herramienta y precondicion."""
     etapa: str
     descripcion: str
     prioridad: int
+    criticidad: str = "media"          # alta | media | baja (para priorizar tareas)
     herramienta: str | None = None
     precondicion: str | None = None  # nombre de clave en el estado que debe existir
 
@@ -48,22 +52,26 @@ class Planificador:
                 etapa="1. ANALIZAR_SOLICITUD",
                 descripcion="Valida que el cliente exista y parsea los items solicitados.",
                 prioridad=1,
+                criticidad="alta",
             ),
             PasoPlan(
                 etapa="2. VALIDAR_STOCK",
                 descripcion="Para cada item, consulta stock actual y stock minimo.",
                 prioridad=2,
+                criticidad="alta",
             ),
             PasoPlan(
                 etapa="3. DECIDIR_REPOSICION",
                 descripcion="Si hay items bajo minimo, decide emitir orden de compra (se inyecta de forma adaptativa).",
                 prioridad=3,
+                criticidad="media",
                 precondicion="hay_faltantes",
             ),
             PasoPlan(
                 etapa="4. CREAR_COTIZACION",
                 descripcion="Calcula subtotal, descuento por volumen, IVA y genera la cotizacion.",
                 prioridad=4,
+                criticidad="alta",
                 precondicion="items_validos",
                 herramienta="crear_cotizacion",
             ),
@@ -71,6 +79,7 @@ class Planificador:
                 etapa="5. EVALUAR_RIESGO_CREDITO",
                 descripcion="Evalua cupo disponible y reglas de credito segun el total.",
                 prioridad=5,
+                criticidad="alta",
                 precondicion="nro_cotizacion",
                 herramienta="evaluar_riesgo_credito",
             ),
@@ -78,9 +87,22 @@ class Planificador:
                 etapa="6. DECIDIR_FLUJO_FINAL",
                 descripcion="Confirma el pedido o deriva a aprobacion/ticket segun la decision de credito.",
                 prioridad=6,
+                criticidad="alta",
                 precondicion="decision_credito",
             ),
         ]
+
+    _ORDEN_CRITICIDAD = {"alta": 0, "media": 1, "baja": 2}
+
+    @classmethod
+    def priorizar(cls, pasos: list[PasoPlan]) -> list[PasoPlan]:
+        """Ordena los pasos por criticidad y, dentro de ella, por prioridad.
+
+        Es el esquema de priorizacion explicito (IE5): ante recursos limitados
+        el agente ejecuta primero lo critico para no romper el flujo de negocio.
+        """
+        return sorted(pasos, key=lambda p: (cls._ORDEN_CRITICIDAD.get(p.criticidad, 1),
+                                            p.prioridad))
 
     # ------------------------------------------------------- ejecucion
     def procesar_pedido(self, cliente_id: str, items: str) -> dict:
@@ -105,19 +127,39 @@ class Planificador:
                            f"Cliente {cliente_id} no registrado.")
             return self._resumen(cliente_id, items, "ERROR", pasos_ejecutados,
                                  decisiones, error="Cliente no registrado.")
-        estado["cliente"] = cliente
         try:
-            from .herramientas.escritura import _parse_items
-            detalle_items = _parse_items(s, items)
+            from .herramientas.escritura import _parse_items_tolerante
+            detalle_items, items_invalidos = _parse_items_tolerante(s, items)
         except ValueError as e:
             registrar_paso("1. ANALIZAR_SOLICITUD", None, str(e))
             return self._resumen(cliente_id, items, "ERROR", pasos_ejecutados,
                                  decisiones, error=str(e))
+
+        if not detalle_items:
+            registrar_paso("1. ANALIZAR_SOLICITUD", None,
+                           f"Ningun item valido: {', '.join(items_invalidos)}")
+            return self._resumen(cliente_id, items, "ERROR", pasos_ejecutados,
+                                 decisiones,
+                                 error="No hay items validos en la solicitud.")
+
+        # REPLANIFICACION: si parte de los items es invalida, el plan se ajusta
+        # (se descartan) y el flujo continua con los validos -> decision
+        # adaptativa ante una condicion inesperada del entorno.
+        if items_invalidos:
+            items = ", ".join(f"{i['producto_id']}:{i['cantidad']}" for i in detalle_items)
+            registrar_decision(
+                "REPLANIFICACION",
+                f"Items descartados por invalidos: {', '.join(items_invalidos)}.",
+                "El plan se reajusta y continua solo con los items validos.",
+            )
+
         estado["items"] = detalle_items
+        estado["cliente"] = cliente
         estado["items_validos"] = True
         registrar_paso(
             "1. ANALIZAR_SOLICITUD", "analizar_solicitud",
-            f"{len(detalle_items)} items validos para {cliente['nombre']}.",
+            f"{len(detalle_items)} items validos para {cliente['nombre']}"
+            + (f" ({len(items_invalidos)} descartados)." if items_invalidos else "."),
         )
 
         # --- paso 2: validar stock (pasa por cada item) ----------------------

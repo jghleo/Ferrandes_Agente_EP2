@@ -101,21 +101,46 @@ Puedo ayudarte con: stock y precios (ej. 'stock de TOR-001'), catalogo, cotizaci
 ESCENARIO F2 - MEMORIA DE LARGO PLAZO: retomando cotizacion previa
 CONSULTA: estado de mi pedido PAT-000001
 ------------------------------------------------------------------------------
-Pedido PAT-000001 del cliente CL-004: etapa actual 'PENDIENTE_DESPACHO'. Historial de etapas: PENDIENTE_DESPACHO (2026-10-08T23:34:50). Items: [{"producto_id": "EPP-001", "nombre": "Casco de seguridad clase E color amarillo", "cantidad": 40, "precio_unitario": 8990}, {"producto_id": "EPP-002", "nombre": "Guantes de nitrilo desechables, caja x100", "cantidad": 10, "precio_unitario": 7490}]
+Pedido PAT-000001 del cliente CL-004: etapa actual 'PENDIENTE_DESPACHO'. Historial de etapas: PENDIENTE_DESPACHO (2026-10-17T00:07:22). Items: [{"producto_id": "EPP-001", "nombre": "Casco de seguridad clase E color amarillo", "cantidad": 40, "precio_unitario": 8990}, {"producto_id": "EPP-002", "nombre": "Guantes de nitrilo desechables, caja x100", "cantidad": 10, "precio_unitario": 7490}]
 
 ==============================================================================
 ESCENARIO G - RECUPERACION SEMANTICA (RAG) PARA PREGUNTA GENERAL
 CONSULTA: cuantas horas demora el despacho en concepcion?
 ------------------------------------------------------------------------------
-Segun la informacion de Ferrandes (pol_despacho): despacho: gratis_desde: 100000 plazo_concepcion_horas: 48 plazo_ciudades_vecinas_horas: 72 cobertura: Concepcion, Talcahuano, Chiguayante, San Pedro de la Paz, Penco.
+Segun la informacion de Ferrandes (faq_despacho): Cuanto tarda el despacho: en Concepcion hasta 48 hrs y en ciudades vecinas hasta 72 hrs. El despacho es gratis en compras desde $100.000 (antes de IVA).
 [Para mas detalle puedo consultar otras fichas o generar una cotizacion.]
 
 ==============================================================================
+ESCENARIO H - REPLANIFICACION ANTE ITEMS INVALIDOS (producto inexistente / cantidad 0)
+CONSULTA: quiero cotizar CL-001 con TOR-001:5, FIJ-999:3 y ELE-001:0
+------------------------------------------------------------------------------
+FLUJO DE PEDIDO (cliente CL-001) -> PEDIDO_CONFIRMADO
+  [1. ANALIZAR_SOLICITUD] (analizar_solicitud): 1 items validos para Constructora Montemar Ltda. (2 descartados).
+  [2. VALIDAR_STOCK] (consultar_stock): TOR-001: stock 850/200
+  [4. CREAR_COTIZACION] (crear_cotizacion): Cotizacion COT-000004 generada para Constructora Montemar Ltda. (CL-001):
+- 5 x TOR-001 Tornillo hexagonal inoxidable A4-70 M8 x 30 mm = $600
+Subtotal: $600 | Descuento: 0% ($0) | IVA 19%: $114 | TOTAL: $714.
+  [5. EVALUAR_RIESGO_CREDITO] (evaluar_riesgo_credito): DECISION: CREDITO_OK. Constructora Montemar Ltda. opera con credito; cupo disponible $3,800,000 cubre el total $714.
+  [6. DECIDIR_FLUJO_FINAL] (confirmar_pedido): Pedido PAT-000002 confirmado (cliente CL-001, total $714). Etapa inicial: PENDIENTE_DESPACHO.
+  DECISION REPLANIFICACION: Items descartados por invalidos: FIJ-999 (producto desconocido), ELE-001 (cantidad <= 0). -- El plan se reajusta y continua solo con los items validos.
+  DECISION EVALUACION_CREDITO: CREDITO_OK. Constructora Montemar Ltda. opera con credito; cupo disponible $3,800,000 cubre el total $714. -- Politica de credito y cupo aplicada de forma adaptativa segun el cliente.
+  DECISION APRUEBA: Pedido confirmado y programado para despacho. -- Cupo disponible y condiciones de la operacion cumplidas.
+  Cotizacion: COT-000004 | Total: $714
+  Pedido: PAT-000002
+
+==============================================================================
+ESCENARIO H2 - ENTRADA AMBIGUA (producto/cliente inexistente)
+CONSULTA: tienes stock del producto TOR-999?
+------------------------------------------------------------------------------
+No existe el producto TOR-999 en el catalogo.
+
+==============================================================================
 RESUMEN DE TRAZABILIDAD
-- Interacciones registradas en memoria de largo plazo: 8
-- Cotizaciones generadas: 3 | Pedidos: 1 | Tickets de escalamiento: 3 | Ordenes de reposicion (OC): 3
-- Turnos en memoria de corto plazo de la sesion demo: 18
+- Interacciones registradas en memoria de largo plazo: 10
+- Cotizaciones generadas: 4 | Pedidos: 2 | Tickets de escalamiento: 3 | Ordenes de reposicion (OC): 3
+- Turnos en memoria de corto plazo de la sesion demo: 22
 - Log de trazabilidad: evidencia/logs_agente.jsonl
 - Base de datos de memoria persistente: datos_ferrandes.db
+- Retriever semantico TF-IDF: 8 consultas etiquetadas, hit-rate@3=100%, MRR=1.00
 
-Ejecutado el 2026-10-08T23:34:50
+Ejecutado el 2026-10-17T00:07:22

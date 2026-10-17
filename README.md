@@ -90,7 +90,7 @@ FERRANDES_MODEL=claude-sonnet-4-6
 python scripts/ejecutar_todo.py
 ```
 
-Ejecuta las 29 pruebas unitarias, la demo con evidencia y (si tienes LangChain
+Ejecuta las 38 pruebas unitarias, la demo con evidencia y (si tienes LangChain
 instalado) el smoke test del agente.
 
 ### 1) Mini demo + evidencia de pruebas (sin API, sin dependencias)
@@ -99,9 +99,9 @@ instalado) el smoke test del agente.
 python scripts/demo.py
 ```
 
-Ejecuta 9 escenarios (consulta, pedidos con faltantes de stock, decisiones de
-crédito, cliente nuevo, derivación normativa, memoria corta/larga plazo y
-recuperación semántica) y genera:
+Ejecuta 11 escenarios (consulta, pedidos con faltantes de stock, decisiones de
+crédito, cliente nuevo, derivación normativa, memoria corta/larga plazo,
+recuperación semántica y **manejo de errores con replanificación**) y genera:
 
 - `evidencia/evidencia_pruebas.txt` — salida completa de la ejecución.
 - `evidencia/logs_agente.jsonl` — trazabilidad por consulta.
@@ -113,8 +113,9 @@ recuperación semántica) y genera:
 python tests/ejecutar_tests.py
 ```
 
-Valida herramientas, memoria de corto/largo plazo, recuperación semántica,
-esquema de planificación y decisiones adaptativas (29 pruebas).
+Valida herramientas, memoria de corto/largo plazo, recuperación semántica
+(TF-IDF + métricas de calidad), esquema de planificación, decisiones adaptativas,
+replanificación y priorización por criticidad (38 pruebas).
 
 ### 3) Agente LangChain (framework de agentes)
 
@@ -135,7 +136,7 @@ Abre el notebook **`colab/EP2_Agente_Ferrandes_Colab.ipynb`** en
 
 1. **Copiar el proyecto** — clona tu repositorio de GitHub o sube el ZIP
    `Proyecto_EP2_Ferrandes.zip` arrastrándolo al panel de archivos.
-2. **Pruebas unitarias** — `tests/ejecutar_tests.py` (29 pruebas, sin instalar
+2. **Pruebas unitarias** — `tests/ejecutar_tests.py` (38 pruebas, sin instalar
    nada; el agente solo usa la librería estándar de Python).
 3. **Demo + evidencia** — `scripts/demo.py` regenera `evidencia/` y
    `datos_ferrandes.db`.
@@ -180,7 +181,7 @@ flowchart LR
 | Capa | Componente | Rol |
 |---|---|---|
 | Entrada | `agente.py` / `agente_langchain.py` | Interpreta la intención y orquesta el ciclo observa → decide → actúa → observa |
-| Planificación | `planificador.py` | Esquema de pasos priorizados + inyección adaptativa de pasos (IL5) |
+| Planificación | `planificador.py` | Esquema de pasos priorizados por criticidad, inyección adaptativa y replanificación (IL5) |
 | Herramientas | `consulta.py` / `escritura.py` / `razonamiento.py` | Acciones atómicas de lectura, escritura y decisión (IL2.1) |
 | Memoria | `corto_plazo.py` / `largo_plazo.py` | Coherencia por sesión y estado persistente (IL2.2) |
 | Contexto | `buscar_contexto.py` | Recuperación semántica sobre fuentes de la empresa (IL2.2) |
@@ -214,16 +215,22 @@ generado dinámicamente) y como funciones reutilizables por el ejecutor local.
   pedidos (con historial de etapas), tickets y órdenes de reposición. Una tarea
   iniciada en la sesión A puede retomarse en la sesión B (ver prueba
   `test_persistencia_entre_sesiones`).
-- **Recuperación semántica (RAG):** retriever por similitud de palabras clave
-  sobre el corpus documental de la empresa (equivalent to EP1). En producción se
-  reemplazaría por embeddings + Chroma/FAISS.
+- **Recuperación semántica (RAG):** retriever con **similitud coseno sobre
+  vectores TF-IDF** (ponderación por frecuencia inversa de documento y
+  normalización morfológica ligera) sobre el corpus documental de la empresa
+  (catálogo, políticas y FAQs). Admite **embeddings densos** opcionales
+  (`sentence-transformers`, modo `auto`) sin cambiar la interfaz, y expone
+  `evaluar_recuperacion()` para medir su calidad (**hit-rate@k** y **MRR**).
+  Resultado actual: **hit-rate@3 = 100 % / MRR = 1,00** sobre 8 consultas
+  etiquetadas.
 
 ---
 
 ## 🗺️ Planificación y toma de decisiones
 
-El planificador genera un **esquema priorizado** de 6 etapas para todo pedido y
-**adapta** el flujo cuando el entorno cambia:
+El planificador genera un **esquema priorizado** de 6 etapas para todo pedido
+(cada paso tiene `prioridad` y `criticidad`, y `priorizar()` ordena por
+criticidad), y **adapta** el flujo cuando el entorno cambia:
 
 ```mermaid
 flowchart TD
@@ -255,16 +262,19 @@ flowchart TD
    entrega** (decisión `EVALUACION_CREDITO`).
 4. **Guardrail normativo:** consultas sobre normativas de seguridad **no se
    responden con inventiva**: se derivan a un especialista vía ticket.
+5. **Replanificación:** si la solicitud trae ítems inválidos (producto
+   inexistente o cantidad ≤ 0), el agente los **descarta, lo informa y continúa**
+   con los válidos en lugar de abortar (decisión `REPLANIFICACION`).
 
 ---
 
 ## 🧪 Evidencia de pruebas
 
-- `evidencia/evidencia_pruebas.txt` — demo completa (9 escenarios).
+- `evidencia/evidencia_pruebas.txt` — demo completa (11 escenarios).
 - `evidencia/evidencia_langchain.txt` — traza del grafo LangChain offline.
 - `evidencia/logs_agente.jsonl` — log por consulta (intención, herramientas
   usadas, fuentes RAG, respuesta).
-- `tests/` — 29 pruebas unitarias.
+- `tests/` — 38 pruebas unitarias.
 
 ---
 

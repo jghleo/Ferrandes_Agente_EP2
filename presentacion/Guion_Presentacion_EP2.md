@@ -39,8 +39,9 @@
 - Largo plazo: SQLite (clientes, cotizaciones, pedidos con historial de etapas,
   tickets, OC). **Continuidad de tareas**: cotización de sesión A → estado en
   sesión B (mostrar el test `test_persistencia_entre_sesiones`).
-- Recuperación semántica: retriever por palabras clave (RAG) sobre catálogo,
-  políticas y FAQs — continuidad del enfoque EP1.
+- Recuperación semántica: retriever con similitud coseno TF-IDF (normalización
+  morfológica) y embeddings densos opcionales; calidad medida con hit-rate@3 y
+  MRR (100 % / 1,00 sobre 8 consultas etiquetadas).
 
 ### 4. Planificación (IB) — claves para IE7/IE9
 - Esquema priorizado de 6 etapas (`crear_plan_pedido` en `src/planificador.py`).
@@ -49,19 +50,22 @@
   2. Monto > cupo/umbral → EN_APROBACION + ticket (decisión BLOQUEA).
   3. Cliente nuevo → pago contra entrega (regla de crédito).
   4. Consulta normativa → deriva a especialista (guardrail, no inventa).
+  5. Ítems inválidos (producto inexistente / cantidad 0) → replanifica:
+     descarta los inválidos y continúa con los válidos.
 
 ### 5. Demo en vivo (IA) — script exacto
-1. `python tests/ejecutar_tests.py` → mostrar "Ran 29 tests… OK".
+1. `python tests/ejecutar_tests.py` → mostrar "Ran 38 tests… OK".
 2. `python scripts/demo.py` y recorrer 2-3 escenarios:
    - Escenario A: consulta de stock.
    - Escenario B: pedido con faltante (reposición adaptativa).
    - Escenario C: escalamiento por crédito.
+   - Escenario H: ítems inválidos → replanifica y continúa.
 3. Mostrar `evidencia/logs_agente.jsonl` y el archivo `datos_ferrandes.db` (memoria).
 4. (Opcional) `python scripts/smoke_langchain.py` → grafo del framework + tools.
 
 ### 6. Evidencia y justificación (IB)
-- 29 pruebas unitarias; 3 familias de herramientas validadas por tests de
-  memoria, planificación e integración.
+- 38 pruebas unitarias; 3 familias de herramientas validadas por tests de
+  memoria, planificación, recuperación semántica y replanificación.
 - Tabla de escenarios con estados finales: PEDIDO_CONFIRMADO, EN_APROBACION,
   DERIVADO.
 - Diagramas de orquestación (arquitectura + flujo) en `assets/`.

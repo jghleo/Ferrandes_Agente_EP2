@@ -81,6 +81,18 @@ def main():
             None,
             True,
         ),
+        (
+            "ESCENARIO H - REPLANIFICACION ANTE ITEMS INVALIDOS (producto inexistente / cantidad 0)",
+            "quiero cotizar CL-001 con TOR-001:5, FIJ-999:3 y ELE-001:0",
+            "CL-001",
+            True,
+        ),
+        (
+            "ESCENARIO H2 - ENTRADA AMBIGUA (producto/cliente inexistente)",
+            "tienes stock del producto TOR-999?",
+            "CL-999",
+            True,
+        ),
     ]
 
     agente = AgenteFerrandes(servicios, sesion_id="demo-2026")
@@ -114,6 +126,14 @@ def main():
     lineas.append(f"- Turnos en memoria de corto plazo de la sesion demo: {len(servicios.mc)}")
     lineas.append(f"- Log de trazabilidad: evidencia/logs_agente.jsonl")
     lineas.append(f"- Base de datos de memoria persistente: {DB_PATH.name}")
+
+    # metricas del retriever semantico (IE4)
+    from src.buscar_contexto import evaluar_recuperacion
+    metricas = evaluar_recuperacion(servicios.datos, top_k=3)
+    lineas.append(
+        f"- Retriever semantico TF-IDF: {metricas['n_casos']} consultas etiquetadas, "
+        f"hit-rate@{metricas['top_k']}={metricas['hit_rate']:.0%}, MRR={metricas['mrr']:.2f}"
+    )
 
     print("\n".join(l for l in lineas[-7:]))
 

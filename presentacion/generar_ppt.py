@@ -133,8 +133,18 @@ def generar():
         "Corto plazo: buffer por sesión + resumen comprimido (coherencia en el diálogo).",
         "Largo plazo (SQLite): clientes, cotizaciones, pedidos con historial de etapas, tickets y OC.",
         "Continuidad: cotización de la sesión A → confirmación/estado en la sesión B (persistencia real).",
-        "Recuperación semántica (RAG): retriever sobre catálogo, políticas y FAQs (mismo enfoque EP1).",
+        "Recuperación de contexto: retriever semántico TF-IDF + embeddings densos opcionales (IE4).",
         "Trazabilidad: evidencia/logs_agente.jsonl con fuentes y decisiones por consulta.",
+    ], 0.7, 1.3, 12, 5, tam=17)
+
+    # ------------------------------------------------- 6b metricas del retriever
+    s = diapositiva(prs, "Recuperación semántica: mejora y métricas (IE4)")
+    caja_bullets(s, [
+        "Similitud coseno sobre vectores TF-IDF (pondera términos discriminantes y normaliza).",
+        "Normalización morfológica ligera: “ubicados” empareja con “ubicación”.",
+        "Embeddings densos opcionales (sentence-transformers) sin cambiar la interfaz.",
+        "Medición objetiva: evaluar_recuperacion() → hit-rate@k y MRR.",
+        "Resultado: hit-rate@3 = 100 % · MRR = 1,00 (8 consultas etiquetadas).",
     ], 0.7, 1.3, 12, 5, tam=17)
 
     # ------------------------------------------------- 7 planificación
@@ -142,11 +152,23 @@ def generar():
     s.shapes.add_picture(str(RAIZ / "assets" / "diagrama_flujo_pedido.png"),
                          Inches(0.5), Inches(1.15), height=Inches(6.0))
     caja_bullets(s, [
+        "Plan priorizado por criticidad (6 etapas).",
         "Stock bajo → OC automática + entrega programada.",
         "Monto > cupo/umbral → EN_APROBACION + ticket.",
         "Cliente nuevo → pago contra entrega.",
         "Normativa EPP → deriva a especialista (guardrail).",
-    ], 4.6, 1.5, 8.2, 5, tam=16, color=NARANJA)
+        "Ítems inválidos → REPLANIFICA y continúa.",
+    ], 4.6, 1.35, 8.2, 5.5, tam=15, color=NARANJA)
+
+    # ------------------------------------------------- 7b justificacion
+    s = diapositiva(prs, "Justificación de la orquestación (IE8, IE9)")
+    caja_bullets(s, [
+        "LangChain create_agent: grafo oficial, documentado, cambia de modelo (Claude o simulado).",
+        "Herramientas puras por familia (consulta/escritura/razonamiento): separación de efectos y testeo.",
+        "SQLite como memoria de largo plazo: persistencia sin servidor, migrable a PostgreSQL.",
+        "Retriever TF-IDF: precisión medible hoy y ruta directa a embeddings/vector store.",
+        "Planificador priorizado: cada paso ligado a un requisito del flujo (stock, crédito, SLA).",
+    ], 0.7, 1.3, 12, 5, tam=16)
 
     # ------------------------------------------------- 8 demo
     s = diapositiva(prs, "Demo en vivo")
@@ -154,27 +176,38 @@ def generar():
         "1) Consulta de stock y precio (herramienta de consulta).",
         "2) Pedido con faltante TOR-002: el agente emite OC y cotiza (adaptación).",
         "3) Pedido que supera cupo: escalamiento a vendedor con ticket.",
-        "4) Memoria: estado del pedido PAT-000001 retomado en otra consulta.",
-        "Comando: python scripts/demo.py (sin API, sin costo).",
-    ], 0.7, 1.3, 12, 5, tam=18)
+        "4) Ítems inválidos: replanifica y continúa con los válidos.",
+        "Comando: python scripts/demo.py   |   python tests/ejecutar_tests.py",
+        "Respaldo si falla en vivo: evidencia/ + notebook de Colab ya ejecutado.",
+    ], 0.7, 1.25, 12, 5.2, tam=16)
 
     # ------------------------------------------------- 9 evidencias
     s = diapositiva(prs, "Evidencia y resultados")
     caja_bullets(s, [
-        "29 pruebas unitarias validadas (tests/ejecutar_tests.py) — todas 'ok'.",
-        "9 escenarios de negocio en evidencia/evidencia_pruebas.txt.",
-        "Smoke test del grafo LangChain offline: evidencia/evidencia_langchain.txt.",
-        "Flujos: PEDIDO_CONFIRMADO, EN_APROBACION, DERIVADO (guardrail).",
-        "README + diagramas de orquestación + informe técnico (5 páginas).",
+        "38 pruebas unitarias validadas (tests/ejecutar_tests.py) — todas 'ok'.",
+        "11 escenarios de negocio en evidencia/evidencia_pruebas.txt.",
+        "Retriever: hit-rate@3 = 100 % · MRR = 1,00 (8 consultas etiquetadas).",
+        "Flujos: PEDIDO_CONFIRMADO, EN_APROBACION, DERIVADO, REPLANIFICADO.",
+        "README + diagramas de orquestación + informe técnico (≤5 páginas).",
+    ], 0.7, 1.3, 12, 5, tam=17)
+
+    # ------------------------------------------------- 9b retos y limites
+    s = diapositiva(prs, "Retos, límites y próximos pasos")
+    caja_bullets(s, [
+        "Límite: el grafo LangChain se validó con un LLM simulado (sin API key en la sala).",
+        "Límite: el retriever es TF-IDF; los embeddings densos son opcionales.",
+        "Próximo paso: embeddings reales + vector store (Chroma/FAISS) y medición de calidad.",
+        "Próximo paso: memoria LangChain explícita en el grafo (checkpointer) y traza con LLM real.",
+        "Próximo paso: despliegue con PostgreSQL y pruebas con datos de producción.",
     ], 0.7, 1.3, 12, 5, tam=17)
 
     # ------------------------------------------------- 10 cierre
     s = diapositiva(prs, "Cierre")
     caja_bullets(s, [
         "Decisiones de diseño justificadas por alineación con el flujo (IE9).",
-        "Autonomía demostrada: decisión adaptativa ante stock, crédito y normativa.",
-        "Repositorio: código + documentación + evidencia reproducible.",
-        "Siguiente paso: embeddings reales (Chroma/FAISS) y despliegue en la organización.",
+        "Autonomía demostrada: decisión adaptativa ante stock, crédito, normativa e ítems inválidos.",
+        "Repositorio: código + documentación + evidencia reproducible (38 pruebas, hit-rate@3 100 %).",
+        "Siguiente paso: embeddings reales (Chroma/FAISS), memoria LangChain y despliegue.",
         "¡Gracias! Preguntas →",
     ], 0.7, 1.3, 12, 5, tam=18)
 

@@ -12,19 +12,19 @@ Herramientas de consulta (sin efectos), escritura (persistentes) y razonamiento 
 ## 3. Memoria y recuperación de contexto (IE3, IE4)
 - Corto plazo: buffer por sesión.
 - Largo plazo: SQLite (clientes, cotizaciones, pedidos con historial, tickets, OC).
-- Recuperación semántica: retriever por palabras clave (mock de embeddings, como EP1).
+- Recuperación semántica: retriever con similitud coseno TF-IDF (normalización morfológica) y embeddings densos opcionales; se mide con hit-rate@3 y MRR sobre consultas etiquetadas.
 
 ## 4. Planificación y decisión (IE5)
-Plan priorizado de 6 etapas con inyección adaptativa (reposición, escalamiento de crédito, pago contra entrega, guardrail normativo). Ver `assets/diagrama_flujo_pedido.png`.
+Plan priorizado de 6 etapas por criticidad, con inyección adaptativa (reposición, escalamiento de crédito, pago contra entrega, guardrail normativo) y **replanificación** ante ítems inválidos (descarta y continúa). Ver `assets/diagrama_flujo_pedido.png`.
 
 ## 5. Orquestación (IE8)
 Ver `assets/diagrama_arquitectura.png` y README.
 
 ## 6. Evidencia de pruebas (IE7)
-Ver `evidencia/evidencia_pruebas.txt`, `evidencia/evidencia_langchain.txt` y `evidencia/logs_agente.jsonl`. 29 pruebas unitarias (`tests/ejecutar_tests.py`).
+Ver `evidencia/evidencia_pruebas.txt`, `evidencia/evidencia_langchain.txt` y `evidencia/logs_agente.jsonl`. 38 pruebas unitarias (`tests/ejecutar_tests.py`) y retriever con hit-rate@3 = 100 % (8 consultas etiquetadas).
 
 ## 7. Decisiones de diseño (IE9)
-LangChain create_agent, herramientas por familia, SQLite como memoria LP, retriever por palabras clave, planificador con inyección adaptativa.
+LangChain create_agent, herramientas por familia, SQLite como memoria LP, retriever semántico TF-IDF (con embeddings opcionales), planificador priorizado con replanificación.
 
 ## 8. Declaración de uso de IA y referencias (APA)
 Se usó IA de apoyo; decisiones y reflexiones son propias. Referencias: Anthropic (2026); LangChain (2026); Duoc UC Bibliotecas (2026); Python `sqlite3` docs (2026).

@@ -31,7 +31,7 @@ CELDAS = [
 Este notebook ejecuta el repositorio completo en Google Colab:
 
 1. Copia el repositorio (GitHub) o sube el ZIP de **Ferrandes_Agente_EP2**.
-2. Ejecuta las **29 pruebas unitarias** (sin instalar nada: solo librería estándar).
+2. Ejecuta las **38 pruebas unitarias** (sin instalar nada: solo librería estándar).
 3. Ejecuta la **demo** que genera la evidencia (`evidencia/`).
 4. (Opcional) Smoke test del agente **LangChain** con `pip install -r requirements.txt`.
 5. **Guarda los resultados** en Google Drive o los descarga a tu PC.
@@ -71,8 +71,9 @@ else:
     md(
 """## 2) Pruebas unitarias del agente
 
-Ejecuta las 29 pruebas: herramientas, memoria de corto/largo plazo,
-recuperación semántica, planificación y decisiones adaptativas.
+Ejecuta las 38 pruebas: herramientas, memoria de corto/largo plazo,
+recuperación semántica (TF-IDF y métricas), planificación, decisiones
+adaptativas y replanificación.
 """),
     codigo(
 """# 2) Pruebas unitarias
@@ -81,9 +82,9 @@ recuperación semántica, planificación y decisiones adaptativas.
     md(
 """## 3) Demo + evidencia
 
-`scripts/demo.py` ejecuta 9 escenarios de negocio (stock, pedidos con
-reposición automática, crédito, cliente nuevo, guardrail normativo, memoria y
-RAG) y genera:
+`scripts/demo.py` ejecuta 11 escenarios de negocio (stock, pedidos con
+reposición automática, crédito, cliente nuevo, guardrail normativo, memoria,
+RAG y replanificación ante ítems inválidos) y genera:
 
 - `evidencia/evidencia_pruebas.txt` — salida completa
 - `evidencia/logs_agente.jsonl` — trazabilidad por consulta

@@ -70,5 +70,36 @@ class TestFlujoPedido(BasePlan):
         self.assertIn("PAGO_CONTRA_ENTREGA", decisiones)
 
 
+class TestReplanificacion(BasePlan):
+    def test_descarta_items_invalidos_y_continua(self):
+        """Adaptacion: items desconocidos no abortan el flujo; se replanifica."""
+        r = self.planificador.procesar_pedido("CL-001", "TOR-001:5, XXX-999:5, EPP-001:abc")
+        self.assertEqual(r["estado_final"], "PEDIDO_CONFIRMADO")
+        tipos = [d["tipo"] for d in r["decisiones"]]
+        self.assertIn("REPLANIFICACION", tipos)
+        # la cotizacion solo contiene el item valido
+        cot = self.servicios.ml.get_cotizacion(r["cotizacion"])
+        self.assertEqual([i["producto_id"] for i in cot["items"]], ["TOR-001"])
+
+    def test_todos_invalidos_aborta_con_error(self):
+        r = self.planificador.procesar_pedido("CL-001", "ZZZ-000:5")
+        self.assertEqual(r["estado_final"], "ERROR")
+
+    def test_cliente_no_registrado_aborta(self):
+        r = self.planificador.procesar_pedido("CL-999", "TOR-001:5")
+        self.assertEqual(r["estado_final"], "ERROR")
+
+
+class TestPriorizacion(BasePlan):
+    def test_priorizar_por_criticidad(self):
+        plan = self.planificador.crear_plan_pedido("CL-001", "TOR-001:5")
+        priorizado = self.planificador.priorizar(plan)
+        # los pasos criticos van primero; DECIDIR_REPOSICION (media) al final
+        self.assertEqual(priorizado[0].criticidad, "alta")
+        self.assertEqual(priorizado[-1].etapa, "3. DECIDIR_REPOSICION")
+        criticidades = [p.criticidad for p in priorizado]
+        self.assertEqual(criticidades, sorted(criticidades, key=lambda c: {"alta": 0, "media": 1, "baja": 2}[c]))
+
+
 if __name__ == "__main__":
     unittest.main()
